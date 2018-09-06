@@ -1,0 +1,4 @@
+include LICENSE.txt
+include README.rst
+recursive-include mw_uml_generator/template *
+

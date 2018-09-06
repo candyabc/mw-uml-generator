@@ -1,17 +1,22 @@
 {% for tb in dbmodels %}
+
 {% if tb.as_association %}
 {{ tb.name.lower()}} = Table('{{ tb.name.lower() }}', {{ modelclass }}.metadata,
-    {% for fd in tb.fields %}
-        {{ fd.render_foreign_id() }}
+    {% for line in tb.render_fields() %}
+    {{ line }}{% if not loop.last %},
+    {% endif %}
     {% endfor %}
 )
 {% else %}
 class {{ tb.name|capitalize }}Base({{ modelclass }}):
+    {% if tb.title|length > 0 %}
+    '''
+    {{ tb.title }}
+    '''
+    {% endif %}
     __tablename__ = '{{ tb.name.lower()  }}'
-    {% for field in tb.fields %}
-        {% for line in field.render() %}
+    {% for line in tb.render_fields() %}
     {{ line }}
-        {% endfor %}
     {% endfor %}
 {% endif %}
 

@@ -84,7 +84,8 @@ class UmlModel(UmlPackage):
     pass
 
 class UmlEnumeration(MoUmlElement):
-    pass
+    literals=list
+
 
 class UmlEnumerationLiteral(MoUmlElement):
     pass

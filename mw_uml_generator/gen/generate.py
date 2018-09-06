@@ -1,4 +1,4 @@
-from ..model_umlparser import uml_loads
+from ..uml_parser import uml_loads
 from .parse_rule import SwaggerHandle,ModelHandle
 from ..template import gitignore,genTemplate,requirements
 

@@ -15,8 +15,11 @@ in_params_map = {'h': 'header',
                  'p': 'path',
                  'q': 'query',
                  'b': 'body',
-                 'f': 'form'}
+                 'f': 'formData'}
 
+SS_FILE_IMG ='img'
+SS_FILE_PDF = 'pdf'
+SS_FILE_EXCEL = 'excel'
 
 def get_sw_type_format(atype):
     '''
@@ -90,12 +93,13 @@ class BaseGenerateHandle():
         pass
 
 class SSParamSchema:
-    def __init__(self, name, format='', isarray=False, isref=False,enum_define =None):
+    def __init__(self, name, format='', isarray=False, isref=False,enum_define =None,file_types=[]):
         self.name = name
         self.format = format
         self.isarray = isarray
         self.isref = isref
         self.enum_define = enum_define
+        self.file_types =file_types
 
     def render(self, param_style):
         def ref_style():
@@ -161,6 +165,7 @@ class SSResponseParam(SSParam):
     def __init__(self, name, description, **args):
         super().__init__(name, description, **args)
         self.headers = []
+        self.file_type=None # schema == file时的类别
 
     def render(self):
         re = {'description': self.description}
@@ -201,28 +206,60 @@ class SSoperation():
         self.description = description
         self.in_params = []
         self.re_params = []
+        self.consumes =[]
+        self.produces = []
 
     @property
     def operatorid(self):
         return '%s%s' % (self.method, self.pathname.replace('/', '_').replace('{', '').replace('}', ''))
 
+    def analysis(self):
+        '''
+        分析operation的params，并修改mimetype
+        :return: 
+        '''
+        form_params = filter(lambda param:param.xin ==in_params_map.get('f'),self.in_params)
+        if len(list(filter(lambda param:param.schema.name == 'file', form_params)))>0:
+            self.consumes.append('multipart/form-data')
+        else:
+            self.consumes.append('application/x-www-form-urlencoded')
+
+        body_params = list(filter(lambda param: param.xin == in_params_map.get('b'),self.in_params) )
+        if len(body_params)>0:
+            if body_params[0].schema.name in ('integer','string'):
+                self.consumes.append('text/plain; charset=utf-8')
+
+        re_params =filter(lambda param:param.schema.name =='file',self.re_params)
+        if len(re_params):
+            for re_param in re_params:
+                if SS_FILE_IMG in re_param.schema.file_types:
+                    self.produces += ['image/png','image/gif','image/jpeg']
+                if SS_FILE_PDF in re_param.schema.file_types:
+                    self.produces.append('application/pdf')
+                if SS_FILE_EXCEL in re_param.schema.file_types:
+                    self.produces.append('application/vnd.ms-excel')
+
     def render(self, paths, operationid_prefix):
         paths[self.pathname] = paths.get(self.pathname) or {}
 
         full_operationid = '%s.%s' % (operationid_prefix, self.operatorid)
-        paths[self.pathname][self.method] = OrderDictEx({
+
+        operation_schema = paths[self.pathname][self.method] = OrderDictEx({
             "summary": self.summary,
             "tags": [self.tag],
             "schemes": ['http', 'https'],
             "description": self.description,
-            "consumes": ["application/json"],
-            "produces": ["application/json"],
+            "consumes": self.consumes,
+            "produces": self.produces,
             "operationId": full_operationid,
             "parameters": [param.render() for param in self.in_params],
             "responses": {
                 param.name: param.render() for param in self.re_params
             }})
-
+        if len(self.consumes)==0:
+            operation_schema.pop('consumes')
+        if len(self.produces) == 0:
+            operation_schema.pop('produces')
 
 class SStag:
     def __init__(self, name, description):
@@ -245,6 +282,8 @@ class SwaggerProfile():
         self.operations = []
         self.definitions = []
         self.tags = []
+        self.consumes = ['application/json']
+        self.produces = ['application/json']
 
     @property
     def model_name(self):
@@ -280,6 +319,8 @@ class SwaggerProfile():
                 "title": self.title,
                 "version": self.ver
             },
+            "consumes":self.consumes,
+            "produces":self.produces,
             "basePath": self.basepath,
             "tags": [OrderDictEx({'name': tag.name, 'description': tag.description}) for tag in self.tags],
             "paths": paths,
@@ -346,7 +387,8 @@ class SwaggerHandle(BaseGenerateHandle):
             return paramclass(attr.name, attr.title, required=('nq' in flags),
                               schema=SSParamSchema(name, format=_format, isarray=attr.isArray,
                                                    isref=type(attr.atype) == UmlClass,
-                                                   enum_define=self.parse_enum(attr.atype) if type(attr.atype)==UmlEnumeration else None))
+                                                   enum_define=self.parse_enum(attr.atype) if type(attr.atype)==UmlEnumeration else None),
+                                                   file_types = attr.stereotype.split('/') if name =='file' else [])
 
         def parse_in_param(attr):
             param = parse_attr(attr, SSInParam)
@@ -369,7 +411,9 @@ class SwaggerHandle(BaseGenerateHandle):
             name_basepath = ['swagger'] + name_basepath
 
         profile = SwaggerProfile(*name_basepath)
-
+        if self.hasxml:
+            profile.produces.append('application/xml')
+            profile.consumes.append('application/xml')
         singals = model.filterDeep(UmlSignal)
         profile.tags = [SStag(singal.name, singal.title) for singal in singals]
 

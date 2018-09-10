@@ -1,7 +1,7 @@
 import os,sys
 from ..fileutils import update_save_file,create_directory,FileOp
 
-from ..template import project_mdj,gencode_yml,genTemplate
+from ..template import project_mdj,gencode_yml,genTemplate,gitignore,requirements,run_blank,readme
 from .generate import Generate
 from six import iteritems
 import yaml
@@ -15,10 +15,10 @@ def read_configfile():
         sys.exit('%s 不存在,请先执行 gencode create project.'% CONFIG_FILE)
     with open(CONFIG_FILE) as f:
         return yaml.load(f.read())
-
-def write_configfile(cf):
-    with open(CONFIG_FILE,mode='w') as f :
-        yaml.dump(cf,f,default_flow_style=False)
+#
+# def write_configfile(cf):
+#     with open(CONFIG_FILE,mode='w') as f :
+#         yaml.dump(cf,f,default_flow_style=False)
 
 def save_structure(root_path,structure):
     def save_struct_dict(fullpath,struct_dict):
@@ -39,8 +39,12 @@ def save_structure(root_path,structure):
 # def init_file(opts):
 #     update_save_file(CONFIG_FILE,gencodeFile(opts))
 
+def get_project_root(cwd):
+    project_name = cwd.split('\\')[-1]
+    project_name = project_name.split('/')[-1]
+    return project_name.replace('-', '_')
 
-def create_project(project_name):
+def create_project(project_name,typ='aiohttp'):
     if (project_name or '' )=='':
         sys.exit('please input project name.')
 
@@ -53,109 +57,70 @@ def create_project(project_name):
     project_struct ={
         project_name:{
             'files':{'%s.mdj' % project_name:project_mdj(project_name)},
-            'gencodeFile.yml':gencode_yml(uml_file ='./files/%s.mdj' %(project_name))
+            'gencodeFile.yml':gencode_yml(uml_file ='./files/%s.mdj' %(project_name),project = typ)
         }
     }
-
+    # if typ =='blank':
+    #     project_struct[project_name].update()
     save_structure(cwd,project_struct)
 
-def up_project(project_type =None):
+
+def up_temp_blank(project_name,opts):
+    main_py ='''
+def main():
+    pass                                         
+'''
+    project_root = get_project_root(project_name)
+    return {project_root:{'__init__.py',('',FileOp.NO_CREATE),
+                          'main.py',(main_py,FileOp.NO_CREATE)},
+            '.gitignore':(gitignore(),FileOp.NO_OVERWRITE),
+            'requirements.txt':(requirements(),FileOp.NO_OVERWRITE),
+            'README.md':(readme(project_name),FileOp.NO_OVERWRITE),
+            'run.py':(run_blank(project_root),FileOp.NO_CREATE)}
+
+def up_temp_config(project_name,opts):
+    project_struct =up_temp_blank(project_name,opts)
+    project_root = get_project_root(project_name)
+    project_struct[project_root].update('config.py',(genTemplate('config'),FileOp.NO_OVERWRITE))
+    return project_struct
+
+def up_project(overwrite = False):
     opts =read_configfile()
-    _p_type = project_type or opts.get('project')
+    _p_type = opts.get('project')
     if _p_type ==None:
-        sys.exit('please set project type,use gencode up --type aiohttp|flask')
-    opts['project']= _p_type
-    write_configfile(opts)
-
-    if _p_type =='flask':
-        create_flask()
-    elif _p_type =='aiohttp':
-        create_aiohttp()
-    else:
-        sys.exit('not support this type:%s' % project_type)
-
-
-def create_aiohttp():
-    opts =read_configfile()
-    generate = Generate(opts['uml'])
+        sys.exit('please set project type,use gencode up --type aiohttp|blank|config')
     cwd = os.getcwd()
+    project_name = cwd.split('/')[-1]
+    if _p_type =='aiohttp':
+        project_struct= create_aiohttp()
+    elif _p_type =='blank':
+        project_struct = up_temp_blank(project_name,opts)
+    elif _p_type == 'config':
+        project_struct = up_temp_config(project_name,opts)
+    else:
+        sys.exit('not support this type:%s' % _p_type)
 
-    save_structure(cwd,generate.render_aiohttp())
+    if overwrite :
+        pass
+    save_structure(cwd,project_struct)
+
+def create_aiohttp(opts):
+    generate = Generate(opts)
+    return generate.render_aiohttp()
+
+
 
 def gen_docker():
-    opts = read_configfile()
+    try:
+        opts = read_configfile()
+        envs = opts.get('env')
+    except:
+        envs = None
+
     cwd = os.getcwd()
-    project_name = cwd.split('\\')[-1]
-    project_name = project_name.split('/')[-1]
-    project_name =project_name.replace('-','_')
+    project_root =get_project_root(cwd)
     docker_struct =\
-        {'docker-compose.yml':(genTemplate('docker-compose',envs =opts.get('env') or {},project = project_name),FileOp.NO_OVERWRITE),
-         'run.sh':(genTemplate('run_sh',envs =opts.get('env') or {}),FileOp.NO_OVERWRITE)}
+        {'docker-compose.yml':(genTemplate('docker-compose',envs =envs or {},project = project_root),FileOp.CREATE_NEW),
+         'run.sh':(genTemplate('run_sh',envs =opts.get('env') or {}),FileOp.CREATE_NEW)}
     save_structure(cwd, docker_struct)
-
-# def create_swaggergen(opts):
-#     swaggergen = SwaggerGen(opts['umlfile'])
-#     options = opts.get('swagger', {})
-#     options['service'] = opts.get('service')
-#     swaggergen.generate(options)
-#     return swaggergen
-
-# def create_modelgen(opts):
-#     modelgen = DataModelGen(opts['umlfile'])
-#     modelgen.generate(opts.get('id'))
-#     return modelgen
-
-# def create_aiohttp():
-#     pass
-#     opts =read_configfile()
-#     swaggergen = create_swaggergen(opts)
-#     aio_struct ={
-#         '.gitignore':(gitignore([])),
-#         'requirements.tpl':(read_file_data('aiohttp/requirements.tpl')),
-#         opts['service']:{}
-#     }
-#     service =aio_struct[opts['service']]
-#     if len(swaggergen.swaggers)>0:
-#         swagger =swaggergen.swaggers[0]
-#         service.update({'swagger': swagger.render_swagger()})
-#         service.update(swagger.render_aiohttpservice())
-#
-#     modelgen = create_modelgen(opts)
-#     if len(modelgen.schemas) > 0:
-#         schema =modelgen.schemas[0]
-#         service.update(schema.render_models())
-#     save_structure(opts['projectPath'],aio_struct)
-
-def create_flask():
-    pass
-    # opts =read_configfile()
-    #
-    # flask_struct ={
-    #     '.gitignore':(gitignore([])),
-    #     'requirements.tpl':(read_file_data('flask/requirements.tpl')),
-    #     'run_sh.tpl':(flask_run(opts)),
-    #     'config.tpl.py':(read_file_data('flask/config.tpl.pys')),
-    #     opts['service']:{
-    #         '__init__.py':(read_file_data('flask/app/__init__.pys'))
-    #     }
-    # }
-    #
-    #
-    # service = flask_struct[opts['service']]
-    #
-    # modelgen = create_modelgen(opts)
-    # if len(modelgen.schemas) > 0:
-    #     schema =modelgen.schemas[0]
-    #     flask_struct.update(schema.render_schema())
-    #     service.update(schema.render_flask_models())
-    #
-    # swaggergen = create_swaggergen(opts)
-    # if len(swaggergen.swaggers)>0:
-    #     swagger =swaggergen.swaggers[0]
-    #     service.update({'swagger':swagger.render_swagger()})
-    #     service.update(swagger.render_flaskcontrolls())
-    #
-    # save_structure(opts['projectPath'],flask_struct)
-
-
 

@@ -28,8 +28,14 @@ def gencode_yml(**opts):
 def gitignore(extends=''):
     return genTemplate('.gitignore', extends =extends)
 
-def requirements(extends):
+def requirements(extends=''):
     return genTemplate('requirements',extends =extends)
+
+def readme(project_name):
+    return genTemplate('readme',project_name = project_name)
+
+def run_blank(project_root):
+    return genTemplate('run_blank',project_root=project_root)
 
 
 

@@ -33,7 +33,7 @@ Note
     2. cd project_name
        修改 uml文件
 
-    3. gencode up [--type aiohttp|flask][-o --overwrite]
+    3. gencode up [-o --overwrite]
         根据uml文件产生工程代码
 
 

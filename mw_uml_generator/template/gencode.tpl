@@ -1,12 +1,25 @@
 # uml文件，支持产生swagger,datamodel
 uml: {{ uml_file }}
 # flask | aiohttp
-project: aiohttp
+project: {{ project }}
 
 #用于产生dockercompose file时产生环境变量内容
 env:
-  DATABASE_NAME: maxwin
+#  DATABASE_NAME: maxwin
 
+#产生model的设定
+model:
+{#  autoid: true#}
+{#  id_name: id#}
+{#  id_type: integer#}
+{#  id_connector: '_'#}
+
+#产生swagger的设定
+swagger:
+{#  hasxml: false#}
+{#  auths: []#}
+{#  lang: default#}
+{#  paginate: true#}
 
 
 

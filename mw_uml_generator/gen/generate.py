@@ -4,21 +4,20 @@ from ..template import gitignore,genTemplate,requirements
 
 from ..fileutils import FileOp
 class Generate():
-    def __init__(self,filename,opts=None):
+    def __init__(self,opts):
+        filename = opts['uml']
         self.parser =uml_loads(filename)
         self.root =self.parser.root
-        self.options =opts
+        self.options =opts or {}
         self.modelhandle = self.create_model_handle()
         self.swaggerhandle =self.create_swagger_handle()
 
     def create_model_handle(self):
-        return ModelHandle(self.parser,**(self.options or {}))
+        return ModelHandle(self.parser,**self.options.get('model',{}))
     def create_swagger_handle(self):
-        return SwaggerHandle(self.parser,**(self.options or {}))
+        return SwaggerHandle(self.parser,**self.options.get('swagger',{}))
 
-    def render_aiohttp(self,**args):
-        # option =(self.options or {}).update(args)
-        #todo:option
+    def render_aiohttp(self):
         aio_struct = {
             '.gitignore': (gitignore(),FileOp.NO_OVERWRITE),
             'requirements.txt': (requirements('''

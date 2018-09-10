@@ -3,7 +3,7 @@ services:
   {{ project }}:
     build: .
     image: {{ project }}
-    container_name: {{ project }}_py35
+    container_name: {{ project }}_py36
     restart: always
     environment:
       LOG_LEVEL: ${LOG_LEVEL}

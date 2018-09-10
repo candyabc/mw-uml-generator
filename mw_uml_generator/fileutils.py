@@ -24,14 +24,17 @@ def save_file(path, content, opType,isupdate=False):
     else:
         create_file(path, content)
 
-def update_save_file(path, content, opType=FileOp.NO_OVERWRITE):
+def update_save_file(path, content, opType=FileOp.NO_OVERWRITE,overwrite =False):
+    if overwrite ==True:
+        opType = FileOp.OVERWRITE
+
     if opType==FileOp.NO_CREATE:
-        logger.info('skip:create file %s ' % path)
+        logger.report('skip', path)
         return
     isexist = os.path.exists(path)
     if isexist:
         if opType==FileOp.NO_OVERWRITE:
-            logger.info('skip:create file %s ' % path)
+            logger.report('skip',path)
             return
         elif opType==FileOp.CREATE_NEW:
             create_file(path+'.__',content)
@@ -56,12 +59,14 @@ def create_directory(path, update=False, pretend=False):
         try:
             if not os.path.exists(path):
                 os.mkdir(path)
+                logger.report('create', path)
+
         except OSError:
             if not update:
                 raise
             return  # Do not log if not created
 
-    logger.info('create:%s'% path)
+
 
 def create_file(path, content, pretend=False):
 
@@ -76,6 +81,7 @@ def create_file(path, content, pretend=False):
             but operation is logged.
     """
     # logger.info('%s,%s' %(path,content))
+    isexist = os.path.exists(path)
     if not pretend:
         if not os.path.exists(os.path.dirname(path)):
             create_directory(os.path.dirname(path))
@@ -83,4 +89,10 @@ def create_file(path, content, pretend=False):
         with open(path, 'w') as fh:
             fh.write(content)
 
-    logger.info('write:%s' % path)
+    if isexist:
+        logger.report('overwrite',path)
+    else:
+        if os.path.split('.')[-1]=='__':
+            logger.report('create_new',path)
+        else:
+            logger.report('create' , path)

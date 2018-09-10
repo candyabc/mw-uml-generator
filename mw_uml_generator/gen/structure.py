@@ -1,6 +1,6 @@
 import os,sys
 from ..fileutils import update_save_file,create_directory,FileOp
-
+from ..log import logger
 from ..template import project_mdj,gencode_yml,genTemplate,gitignore,requirements,run_blank,readme
 from .generate import Generate
 from six import iteritems
@@ -20,7 +20,7 @@ def read_configfile():
 #     with open(CONFIG_FILE,mode='w') as f :
 #         yaml.dump(cf,f,default_flow_style=False)
 
-def save_structure(root_path,structure):
+def save_structure(root_path,structure,overwrite =False):
     def save_struct_dict(fullpath,struct_dict):
         for key, value in iteritems(struct_dict):
             if type(value) == dict:
@@ -29,9 +29,9 @@ def save_structure(root_path,structure):
                 save_struct_dict(path0,value)
             else:
                 if type(value)==tuple:
-                    update_save_file(os.path.join(fullpath,key),*value)
+                    update_save_file(os.path.join(fullpath,key),*value,overwrite=overwrite)
                 else:
-                    update_save_file(os.path.join(fullpath, key), value)
+                    update_save_file(os.path.join(fullpath, key), value,overwrite = overwrite)
 
     save_struct_dict(root_path,structure)
 
@@ -45,6 +45,7 @@ def get_project_root(cwd):
     return project_name.replace('-', '_')
 
 def create_project(project_name,typ='aiohttp'):
+    logger.report('run','create project: %s' % project_name)
     if (project_name or '' )=='':
         sys.exit('please input project name.')
 
@@ -64,6 +65,7 @@ def create_project(project_name,typ='aiohttp'):
     #     project_struct[project_name].update()
     save_structure(cwd,project_struct)
 
+    logger.info('create project %s finished.' % project_name)
 
 def up_temp_blank(project_name,opts):
     main_py ='''
@@ -92,7 +94,7 @@ def up_project(overwrite = False):
     cwd = os.getcwd()
     project_name = cwd.split('/')[-1]
     if _p_type =='aiohttp':
-        project_struct= create_aiohttp()
+        project_struct= create_aiohttp(opts)
     elif _p_type =='blank':
         project_struct = up_temp_blank(project_name,opts)
     elif _p_type == 'config':
@@ -100,9 +102,7 @@ def up_project(overwrite = False):
     else:
         sys.exit('not support this type:%s' % _p_type)
 
-    if overwrite :
-        pass
-    save_structure(cwd,project_struct)
+    save_structure(cwd,project_struct,overwrite)
 
 def create_aiohttp(opts):
     generate = Generate(opts)

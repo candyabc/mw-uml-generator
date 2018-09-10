@@ -4,6 +4,7 @@ import sys
 import logging
 from . import __version__
 from .import create_project,up_project,gen_docker
+from .log import configure_logger
 
 
 def get_version(ctx, param, value):
@@ -15,10 +16,12 @@ def get_version(ctx, param, value):
 def setup_logging(ctx, param, value):
     """Setup basic logging 
     """
+
     loglevel = logging.DEBUG if value else logging.INFO
-    logformat = "[%(asctime)s] %(levelname)s:%(name)s:%(message)s"
-    logging.basicConfig(level=loglevel, stream=sys.stdout,
-                        format=logformat, datefmt="%Y-%m-%d %H:%M:%S")
+    configure_logger({'log_level':loglevel})
+    # logformat = "[%(asctime)s] %(levelname)s:%(name)s:%(message)s"
+    # logging.basicConfig(level=loglevel, stream=sys.stdout,
+    #                     format=logformat, datefmt="%Y-%m-%d %H:%M:%S")
 
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -34,10 +37,10 @@ def create(project_name):
     create_project(project_name)
 
 @cli.command()
-@click.option('--typ',type=str,default ='aiohttp',help='工程类别 aiohttp | flask')
-@click.option('--force',type=bool,default =False ,help='是否强制全覆盖所有文件')
-def up(typ ,force =False):
-    up_project(typ)
+# @click.option('--typ',type=str,default ='aiohttp',help='工程类别 aiohttp | flask')
+@click.option('-o','--overwrite',type=bool,default =False ,help='是否强制全覆盖所有文件')
+def up(overwrite =False):
+    up_project(overwrite)
 
 @cli.command()
 def docker():

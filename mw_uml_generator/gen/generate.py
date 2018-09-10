@@ -13,9 +13,9 @@ class Generate():
         self.swaggerhandle =self.create_swagger_handle()
 
     def create_model_handle(self):
-        return ModelHandle(self.parser,**self.options.get('model',{}))
+        return ModelHandle(self.parser,**(self.options.get('model') or {}))
     def create_swagger_handle(self):
-        return SwaggerHandle(self.parser,**self.options.get('swagger',{}))
+        return SwaggerHandle(self.parser,**(self.options.get('swagger') or {}))
 
     def render_aiohttp(self):
         aio_struct = {

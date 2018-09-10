@@ -45,7 +45,7 @@ def get_project_root(cwd):
     return project_name.replace('-', '_')
 
 def create_project(project_name,typ='aiohttp'):
-    logger.report('run','create project: %s' % project_name)
+    logger.report('run','create project: %s' % project_name,typ)
     if (project_name or '' )=='':
         sys.exit('please input project name.')
 
@@ -87,6 +87,7 @@ def up_temp_config(project_name,opts):
     return project_struct
 
 def up_project(overwrite = False):
+    logger.report('run','up generate ')
     opts =read_configfile()
     _p_type = opts.get('project')
     if _p_type ==None:
@@ -103,12 +104,11 @@ def up_project(overwrite = False):
         sys.exit('not support this type:%s' % _p_type)
 
     save_structure(cwd,project_struct,overwrite)
+    logger.info( 'up generate finished')
 
 def create_aiohttp(opts):
     generate = Generate(opts)
     return generate.render_aiohttp()
-
-
 
 def gen_docker():
     try:

@@ -29,10 +29,12 @@ def save_structure(root_path,structure,overwrite =False):
                 save_struct_dict(path0,value)
             else:
                 if type(value)==tuple:
-                    update_save_file(os.path.join(fullpath,key),*value,overwrite=overwrite)
-                else:
+                    ( content, opType )= value
+                    update_save_file(os.path.join(fullpath,key),content, opType ,overwrite=overwrite)
+                elif type(value)==str:
                     update_save_file(os.path.join(fullpath, key), value,overwrite = overwrite)
-
+                else:
+                    raise Exception('save_structure not support :%s' % value)
     save_struct_dict(root_path,structure)
 
 
@@ -44,8 +46,8 @@ def get_project_root(cwd):
     project_name = project_name.split('/')[-1]
     return project_name.replace('-', '_')
 
-def create_project(project_name,typ='aiohttp'):
-    logger.report('run','create project: %s' % project_name,typ)
+def create_project(project_name,template):
+    logger.report('run','create project: %s from %s' % (project_name,template))
     if (project_name or '' )=='':
         sys.exit('please input project name.')
 
@@ -58,7 +60,7 @@ def create_project(project_name,typ='aiohttp'):
     project_struct ={
         project_name:{
             'files':{'%s.mdj' % project_name:project_mdj(project_name)},
-            'gencodeFile.yml':gencode_yml(uml_file ='./files/%s.mdj' %(project_name),project = typ)
+            'gencodeFile.yml':gencode_yml(uml_file ='./files/%s.mdj' %(project_name),project = template)
         }
     }
     # if typ =='blank':
@@ -73,8 +75,8 @@ def main():
     pass                                         
 '''
     project_root = get_project_root(project_name)
-    return {project_root:{'__init__.py',('',FileOp.NO_CREATE),
-                          'main.py',(main_py,FileOp.NO_CREATE)},
+    return {project_root:{'__init__.py':('',FileOp.NO_OVERWRITE),
+                          'main.py':(main_py,FileOp.NO_OVERWRITE)},
             '.gitignore':(gitignore(),FileOp.NO_OVERWRITE),
             'requirements.txt':(requirements(),FileOp.NO_OVERWRITE),
             'README.md':(readme(project_name),FileOp.NO_OVERWRITE),
@@ -83,7 +85,7 @@ def main():
 def up_temp_config(project_name,opts):
     project_struct =up_temp_blank(project_name,opts)
     project_root = get_project_root(project_name)
-    project_struct[project_root].update('config.py',(genTemplate('config'),FileOp.NO_OVERWRITE))
+    project_struct[project_root].update({'config.py':(genTemplate('config'),FileOp.NO_OVERWRITE)})
     return project_struct
 
 def up_project(overwrite = False):

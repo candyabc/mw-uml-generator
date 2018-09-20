@@ -16,7 +16,6 @@ def get_version(ctx, param, value):
 def setup_logging(ctx, param, value):
     """Setup basic logging 
     """
-
     loglevel = logging.DEBUG if value else logging.INFO
     configure_logger({'log_level':loglevel})
     # logformat = "[%(asctime)s] %(levelname)s:%(name)s:%(message)s"
@@ -33,8 +32,9 @@ def cli():
 
 @cli.command()
 @click.argument('project_name')
-def create(project_name):
-    create_project(project_name)
+@click.option('-t','--template',type=str,default ='aiohttp' ,help='创建event的模板,aiohttp|blank|config')
+def create(project_name,template):
+    create_project(project_name,template)
 
 @cli.command()
 # @click.option('--typ',type=str,default ='aiohttp',help='工程类别 aiohttp | flask')

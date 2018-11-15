@@ -21,5 +21,12 @@ swagger:
 {#  lang: default#}
 {#  paginate: true#}
 
+apijs:
+  outPath:
+  default:
+    in:
+    out:
+
+
 
 

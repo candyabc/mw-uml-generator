@@ -3,7 +3,7 @@ import click
 import sys
 import logging
 from . import __version__
-from .import create_project,up_project,gen_docker
+from .import create_project,up_project,gen_docker,gen_apijs,init_config
 from .log import configure_logger
 
 
@@ -46,6 +46,15 @@ def up(overwrite =False):
 def docker():
    gen_docker()
 
+@cli.command()
+@click.option('-n','--name',type=str,help='在 config 文件 apijs设定的名称')
+@click.option('-i','--in','--infile',type=str,help='in swagger file')
+@click.option('-o','--out','--outfile',type=str,help='out api.js file')
+def apijs(name=None,infile=None,outfile=None):
+    gen_apijs(name,infile,outfile)
 
+@cli.command()
+def init():
+    init_config()
 if __name__ == "__main__":
     cli()

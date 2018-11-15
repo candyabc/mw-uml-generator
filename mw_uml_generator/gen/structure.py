@@ -5,6 +5,8 @@ from ..template import project_mdj,gencode_yml,genTemplate,gitignore,requirement
 from .generate import Generate
 from six import iteritems
 import yaml
+import requests
+from .swagger2api import swagger2api
 
 
 CONFIG_FILE ='./gencodeFile.yml'
@@ -88,6 +90,12 @@ def up_temp_config(project_name,opts):
     project_struct[project_root].update({'config.py':(genTemplate('config'),FileOp.NO_OVERWRITE)})
     return project_struct
 
+def init_config():
+    logger.report('run', 'init config file')
+    cwd = os.getcwd()
+    update_save_file(os.path.join(cwd,'gencodeFile.yml'),
+    gencode_yml(uml_file ='',project = 'blank'))
+
 def up_project(overwrite = False):
     logger.report('run','up generate ')
     opts =read_configfile()
@@ -126,3 +134,53 @@ def gen_docker():
          'run.sh':(genTemplate('run_sh',envs =opts.get('env') or {}),FileOp.CREATE_NEW)}
     save_structure(cwd, docker_struct)
 
+
+def isBlank(v):
+    return v in [None,'']
+def gen_apijs(name,infile,outfile):
+    logger.report('run', 'run swagger2api name %s ,in:%s:out:%s' % (name,infile,outfile))
+    try:
+        opts = read_configfile()
+        apijs = opts.get('apijs')
+    except:
+        apijs = None
+    if name:
+        if apijs is None:
+            sys.exit('%s不存在或设定apijs不存在' % CONFIG_FILE)
+        cf = apijs.get(name)
+        if cf is None:
+            sys.exit('apijs.%s 未设定 ')
+        if isBlank(cf.get('in')):
+            sys.exit('参数apijs.%s.in未设定' % name)
+        if isBlank(cf.get('out')) and isBlank(apijs.get('outPath')):
+            sys.exit('请设定参数apijs.%s.out或 apijs.outPath' % name)
+        infile = cf['in']
+        outpath = os.path.abspath( apijs['outPath'])
+        outfile =os.path.join(outpath,('%s.js' % name)) if isBlank(cf.get('out')) else os.path.abspath(cf['out'])
+
+        # outfile =os.path.join( os.path.abspath( apijs['outPath']),('%s.yml' % name)) if cf.get('out','') =='' else os.path.abspath(cf.get['out'])
+    else:
+        if isBlank(infile):
+            sys.exit('请设定 -i 参数')
+        if isBlank(outfile) :
+            sys.exit('请设定 -o 参数')
+
+    #检查infile的类别，可以从http或本地文件读取
+    if infile.startswith('http'):
+        res =requests.get(infile)
+        if res.status_code!=200:
+            sys.exit('fetch %s 失败,%s' % (infile,res.text))
+        else:
+            swagger =res.json()
+    else:
+        if not os.path.exists(os.path.abspath(infile)):
+            sys.exit('in file:%s不存在' % infile)
+        with open(os.path.abspath(infile)) as f:
+            swagger = yaml.load(f.read())
+    swagger2api(swagger, outfile)
+    logger.report('invoke','产生%s完成' % outfile)
+    # if infile is None:
+    #     for _infile,_outfile in apijs.items():
+    #         swagger2api(_infile,outfile)
+    # else:
+    #     swagger2api(infile,outfile)

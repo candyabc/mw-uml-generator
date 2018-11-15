@@ -35,7 +35,7 @@ def grep(attrname):
 
 entry_points = """
 [console_scripts]
-gencode = mw_uml_generator.cli:cli
+pycli = mw_uml_generator.cli:cli
 """
 install_requires = [
 ]

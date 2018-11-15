@@ -1,5 +1,5 @@
 from __future__ import print_function, absolute_import, division
-from mw_uml_generator.gen.structure import create_project,up_project,create_aiohttp,gen_docker
+from mw_uml_generator.gen.structure import create_project,up_project,create_aiohttp,gen_docker,gen_apijs
 
 import os
 
@@ -18,3 +18,8 @@ class CliTestCase(unittest.TestCase):
     def test_up_project(self):
         os.chdir(os.path.join(self.projectname))
         up_project()
+
+
+
+
+

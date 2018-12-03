@@ -40,3 +40,10 @@ Note
     4. 产生docker-compose file
        在gencodeFile的env中设定环境变量
        gencode docker [-o --overwrite]
+
+增加功能
+=======
+
+::
+
+    增加从markdown产生swagger并加入到创建aiohttp功能中

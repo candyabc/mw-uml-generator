@@ -21,6 +21,9 @@ swagger:
 {#  lang: default#}
 {#  paginate: true#}
 
+markdown:
+
+
 apijs:
   outPath:
   default:

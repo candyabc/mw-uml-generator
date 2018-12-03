@@ -3,6 +3,7 @@ from .parse_rule import SwaggerHandle,ModelHandle
 from ..template import gitignore,genTemplate,requirements
 
 from ..fileutils import FileOp
+import os
 class Generate():
     def __init__(self,opts):
         filename = opts['uml']
@@ -11,6 +12,11 @@ class Generate():
         self.options =opts or {}
         self.modelhandle = self.create_model_handle()
         self.swaggerhandle =self.create_swagger_handle()
+
+        md = opts.get('markdown')
+        if md:
+            for key,v in md.items():
+                self.swaggerhandle.md2swagger(os.path.abspath(v),key)
 
     def create_model_handle(self):
         return ModelHandle(self.parser,**(self.options.get('model') or {}))

@@ -96,7 +96,7 @@ def init_config():
     update_save_file(os.path.join(cwd,'gencodeFile.yml'),
     gencode_yml(uml_file ='',project = 'blank'))
 
-def up_project(overwrite = False):
+def up_project(overwrite = False,flag=None):
     logger.report('run','up generate ')
     opts =read_configfile()
     _p_type = opts.get('project')
@@ -105,7 +105,7 @@ def up_project(overwrite = False):
     cwd = os.getcwd()
     project_name = cwd.split('/')[-1]
     if _p_type =='aiohttp':
-        project_struct= create_aiohttp(opts)
+        project_struct= create_aiohttp(opts,flag)
     elif _p_type =='blank':
         project_struct = up_temp_blank(project_name,opts)
     elif _p_type == 'config':
@@ -116,7 +116,8 @@ def up_project(overwrite = False):
     save_structure(cwd,project_struct,overwrite)
     logger.info( 'up generate finished')
 
-def create_aiohttp(opts):
+def create_aiohttp(opts,flag):
+    opts['flag']=flag
     generate = Generate(opts)
     return generate.render_aiohttp()
 

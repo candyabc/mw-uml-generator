@@ -38,9 +38,11 @@ def create(project_name,template):
 
 @cli.command()
 # @click.option('--typ',type=str,default ='aiohttp',help='工程类别 aiohttp | flask')
+@click.option('-f','--flag',type=str,help='')
 @click.option('-o','--overwrite',type=bool,default =False ,help='是否强制全覆盖所有文件')
-def up(overwrite =False):
-    up_project(overwrite)
+
+def up(flag=None,overwrite=False):
+    up_project(overwrite,flag=flag)
 
 @cli.command()
 def docker():

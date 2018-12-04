@@ -286,7 +286,7 @@ class SchemaType():
             return cls('DateTime')
         elif _type == 'time':
             return cls('Time')
-        elif _type == 'double':
+        elif _type in [ 'double','float']:
             return cls('Float')
         elif _type in ('int', 'integer'):
             return cls('Integer')
@@ -369,6 +369,24 @@ class ModelProfile():
         for field in self.fields:
             re.extend(field.render())
         return re
+
+    def render_as_columns(self):
+        re =[]
+        for field in self.fields:
+            schema =field.render()[0]
+            index = schema.find('=')
+            name =schema[:index]
+            schema =schema[index+1:]
+
+            findstr ='db.Column('
+            schema=schema.replace(findstr,findstr +'"%s",' % name)
+            re.append(schema)
+        return re
+
+
+
+
+
 def name_add_s(name, isarray):
     return (name + ('s' if isarray else '')).lower()
 
@@ -576,3 +594,8 @@ class ModelHandle(BaseGenerateHandle):
             genTemplate('db_model_base', dbmodels=self.dbmodels.values(),
                         enum_profiles = self.enum_profiles, modelclass='Base'), FileOp.OVERWRITE),
             'models.py': (genTemplate('db_model', dbmodels=self.dbmodels.values()), FileOp.CREATE_NEW)})
+
+    def gen_table_define(self,app_struct):
+        app_struct['models'] = app_struct.get('models', {})
+        app_struct['models'].update({'models.py':(genTemplate('db_table_define', dbmodels=self.dbmodels.values(),
+                        enum_profiles = self.enum_profiles), FileOp.OVERWRITE)})

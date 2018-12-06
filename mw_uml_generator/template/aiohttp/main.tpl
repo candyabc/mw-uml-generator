@@ -29,10 +29,7 @@ async def on_cleanup(app):
 def init_app(app):
     #todo:
     app['config'] = configs.get(app['mode'])()
-    logging.basicConfig(app['config'].log_level,format = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
-
-
-
+    logging.basicConfig(level=app['config'].log_level,format = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
 
 
 def setup_swagger_file(app,swagger_name,swagger_url):

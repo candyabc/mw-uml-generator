@@ -191,7 +191,6 @@ class MdTemplateParser():
         cf = MdList(config).to_json()
         assert 'basePath' in cf.keys(),'文档必需有配置basePath'
 
-
         self.swagger.basepath =cf['basePath']
         self.swagger.title = self.root.text
 
@@ -262,7 +261,7 @@ class MdTemplateParser():
                     _tb = item.find_first_token('table')
                     if _tb is not None:
                         tb = MdTable(_tb)
-                        operation.in_params = [self.table_row_to_param(row,SSInParam) for row in tb.rows]
+                        operation.in_params = [self.table_row_to_param(row,SSInParam) for row in tb.rows if row[0].strip()!='']
 
 
                 outparam = item.find_firstchild(lambda node: '返回结果' in node.text)
@@ -277,6 +276,20 @@ class MdTemplateParser():
 
                         operation.re_params.append(param)
 
+    def parse_template(self):
+        node = self.root.find_first(2, '模版')
+        if node is None:
+            return
+        template = node.find_first(3,'path参数')
+        if template is None:
+            return
+        _tb = template.find_first_token('table')
+        if _tb:
+            tb =MdTable(_tb)
+            for op in self.swagger.operations:
+                for row in tb.rows:
+                    if '{%s}' % row[0] in op.pathname:
+                        op.in_params.append(self.table_row_to_param(row,SSInParam))
 
     def parse(self,filename):
         with open(filename) as f:
@@ -295,6 +308,8 @@ class MdTemplateParser():
 
         #对协议部分单独解析
         self.parse_operations()
+
+        self.parse_template()
         return self.swagger
 
 

@@ -5,6 +5,7 @@ from .config import configs
 import os
 import asyncio
 import yaml
+import logging
 
 
 
@@ -44,8 +45,8 @@ def setup_swagger_file(app,swagger_name,swagger_url):
                   ,swagger_url=swagger_url)  # <-- Loaded Swagger from external YAML file
 
 
-def create_app(loop):
-    app = web.Application(debug=options.get('debug',False) ,loop=loop)
+def create_app():
+    app = web.Application(debug=False )
     app['mode']=os.environ.get('mode','default')
     init_app(app)
     app.on_startup.append(after_start_app)

@@ -9,17 +9,17 @@ env:
 
 #产生model的设定
 model:
-{#  autoid: true#}
-{#  id_name: id#}
-{#  id_type: integer#}
-{#  id_connector: '_'#}
+  # autoid: true
+  # id_name: id
+  # id_type: integer
+  # id_connector: '_'
 
 #产生swagger的设定
 swagger:
-{#  hasxml: false#}
-{#  auths: []#}
-{#  lang: default#}
-{#  paginate: true#}
+  # hasxml: false
+  # auths: []
+  # lang: default
+  # paginate: true
 
 markdown:
 

@@ -7,6 +7,7 @@ import asyncio
 import yaml
 
 
+
 try:
     # 只有Linux下才能运行
     import uvloop
@@ -27,6 +28,10 @@ async def on_cleanup(app):
 def init_app(app):
     #todo:
     app['config'] = configs.get(app['mode'])()
+    logging.basicConfig(app['config'].log_level,format = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
+
+
+
 
 
 def setup_swagger_file(app,swagger_name,swagger_url):
@@ -39,10 +44,9 @@ def setup_swagger_file(app,swagger_name,swagger_url):
                   ,swagger_url=swagger_url)  # <-- Loaded Swagger from external YAML file
 
 
-def create_app(loop,options):
+def create_app(loop):
     app = web.Application(debug=options.get('debug',False) ,loop=loop)
-    app['mode']=options.get('mode','default')
-    # app.logger.setLevel(app['config'].logger_level)
+    app['mode']=os.environ.get('mode','default')
     init_app(app)
     app.on_startup.append(after_start_app)
     app.on_cleanup.append(on_cleanup)
@@ -55,11 +59,6 @@ def create_app(loop,options):
 
     return app
 
-def main(options):
-    loop =asyncio.get_event_loop()
-    try:
-        # logging.basicConfig(level=logging.INFO)
-        app = create_app(loop,options)
-        web.run_app(app,port=app['config'].port)
-    finally:
-        loop.close()
+def main():
+    app = create_app()
+    web.run_app(app,port=app['config'].port)

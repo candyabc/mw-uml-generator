@@ -7,16 +7,16 @@ import unittest
 
 class CliTestCase(unittest.TestCase):
     def setUp(self):
-        print(os.getcwd())
+        # print(os.getcwd())
         # os.chdir('./tests')
-        self.projectname ='aabbcc'
+        self.projectname ='mw-apppush-srv'
 
     # def test_create_project(self):
     #     create_project(project_name=self.projectname)
     #     assert os.path.exists(self.projectname)
 
     def test_up_project(self):
-        os.chdir(os.path.join(self.projectname))
+        os.chdir('D:\\work\\mwwork\\mw-notice\\mw-apppush-srv')
         up_project()
 
 

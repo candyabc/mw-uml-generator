@@ -195,20 +195,20 @@ class SwaggerHandle(BaseGenerateHandle):
 
                 if self.lang == 'default':
                     # add path param
-                    ssop.in_params.append(SSParam('lang', '多语言', schema=SSParamSchema('string'), xin='path'))
+                    ssop.in_params.append(SSInParam('lang', '多语言', schema=SSParamSchema('string'), xin='path'))
 
                 if self.auths:
                     if 'jwt' in self.auths:
                         ssop.in_params.append(
-                            SSParam('jwt', 'jwt token', schema=SSParamSchema('string'), xin='query', required=False))
-                        ssop.in_params.append(
-                            SSParam('jwt', 'jwt token', schema=SSParamSchema('string'), xin='header', required=False))
+                            SSInParam('jwt', 'jwt token', schema=SSParamSchema('string'), xin='query', required=False))
+                        # ssop.in_params.append(
+                        #     SSInParam('jwt', 'jwt token', schema=SSParamSchema('string'), xin='header', required=False))
 
                     if 'apikey' in self.auths:
                         ssop.in_params.append(
-                            SSParam('apikey', 'api key', schema=SSParamSchema('string'), xin='query', required=False))
-                        ssop.in_params.append(
-                            SSParam('apikey', 'api key', schema=SSParamSchema('string'), xin='header', required=False))
+                            SSInParam('apikey', 'api key', schema=SSParamSchema('string'), xin='query', required=False))
+                        # ssop.in_params.append(
+                        #     SSInParam('apikey', 'api key', schema=SSParamSchema('string'), xin='header', required=False))
 
                 re_params = list(filter(lambda param: param.direction == 'return', operation.parameters))
                 # if len(re_params) == 0:

@@ -21,5 +21,6 @@ class {{ enum_profile.name|capitalize }}(Enum):
 {% include "./db_model_define.tpl" %}
 
 if __name__ == "__main__":
-    pass
-    # engine = db.create_engine("")
+    engine = db.create_engine('mssql+pymssql://sa:111@192.168.101.238/gxtest?charset=utf8')
+    # Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)

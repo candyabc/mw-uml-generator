@@ -92,11 +92,11 @@ class JttParamType:
 
         name = self.name.lower()
         if name =='byte':
-            return swagger_param('integer','int32',0,255,isarray=self.isArray,fixlen=self.fixLen)
+            return swagger_param('integer','int32',minimum=0,maximum=255,isarray=self.isArray,fixlen=self.fixLen)
         elif name =='word':
-            return swagger_param('integer','int32',0,65535,isarray=self.isArray,fixlen=self.fixLen)
+            return swagger_param('integer','int32',minimum=0,maximum=65535,isarray=self.isArray,fixlen=self.fixLen)
         elif name=='dword':
-            return swagger_param('integer','int32',0,isarray=self.isArray,fixlen=self.fixLen)
+            return swagger_param('integer','int32',minimum=0,isarray=self.isArray,fixlen=self.fixLen)
         elif name =='int64' or name=='uint64':
             return swagger_param('integer','int64',isarray=self.isArray,fixlen=self.fixLen)
         elif name=='float':

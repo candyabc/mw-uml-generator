@@ -71,21 +71,27 @@ def create_project(project_name,template):
 
     logger.info('create project %s finished.' % project_name)
 
-def up_temp_blank(project_name,opts):
+def up_temp_blank(project_name,opts,flag):
     main_py ='''
 def main():
     pass                                         
 '''
     project_root = get_project_root(project_name)
-    return {project_root:{'__init__.py':('',FileOp.NO_OVERWRITE),
-                          'main.py':(main_py,FileOp.NO_OVERWRITE)},
+    project_data = {'__init__.py':('',FileOp.NO_OVERWRITE),
+                          'main.py':(main_py,FileOp.NO_OVERWRITE)}
+    if flag =='table':
+        opts['flag']=flag
+        generate = Generate(opts)
+        generate.modelhandle.gen_table_define(project_data)
+
+    return {project_root:project_data,
             '.gitignore':(gitignore(),FileOp.NO_OVERWRITE),
             'requirements.txt':(requirements(),FileOp.NO_OVERWRITE),
             'README.md':(readme(project_name),FileOp.NO_OVERWRITE),
             'run.py':(run_blank(project_root),FileOp.NO_CREATE)}
 
-def up_temp_config(project_name,opts):
-    project_struct =up_temp_blank(project_name,opts)
+def up_temp_config(project_name,opts,flag):
+    project_struct =up_temp_blank(project_name,opts,flag)
     project_root = get_project_root(project_name)
     project_struct[project_root].update({'config.py':(genTemplate('config'),FileOp.NO_OVERWRITE)})
     return project_struct
@@ -107,9 +113,9 @@ def up_project(overwrite = False,flag=None):
     if _p_type =='aiohttp':
         project_struct= create_aiohttp(opts,flag)
     elif _p_type =='blank':
-        project_struct = up_temp_blank(project_name,opts)
+        project_struct = up_temp_blank(project_name,opts,flag)
     elif _p_type == 'config':
-        project_struct = up_temp_config(project_name,opts)
+        project_struct = up_temp_config(project_name,opts,flag)
     else:
         sys.exit('not support this type:%s' % _p_type)
 

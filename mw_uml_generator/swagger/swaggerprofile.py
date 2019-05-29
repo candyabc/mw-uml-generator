@@ -27,7 +27,7 @@ def parse_directive(text):
 def ref_define(name):
     return {'$ref': '#/definitions/%s' % name.capitalize()}
 class SSParam:
-    def __init__(self, name, description,schema=None, required=True):
+    def __init__(self, name, description,schema=None, required=True,**args):
         self.name = name
         self.description = description
         self.required = required
@@ -35,11 +35,15 @@ class SSParam:
 
 class SSParamSchema:
     def __init__(self, name, format='', isarray=False, isref=False,**args):
+
         self.name = name
         self.format = format
         self.isarray = isarray
         self.isref = isref
-        self.enum_define = None
+        try:
+            self.enum_define = args.pop('enum_define')
+        except:
+            self.enum_define=None
         self.file_types =[]
         self.extra =args or {}
 
@@ -67,6 +71,7 @@ class SSParamSchema:
             if not 'schema' in re.keys():
                 re.pop('format')
                 re = {'schema': re}
+
         return re
 
 class SSInParam(SSParam):

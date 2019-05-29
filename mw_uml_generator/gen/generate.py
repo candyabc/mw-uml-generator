@@ -43,6 +43,7 @@ uvloop
         if self.options.get('flag','')=='table':
             self.modelhandle.gen_table_define(aio_struct['app'])
         else:
+            self.modelhandle.gen_aiohttp(aio_struct['app'])
             self.swaggerhandle.gen_aiohttps(aio_struct['app'])
 
         return aio_struct

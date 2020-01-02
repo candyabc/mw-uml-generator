@@ -52,7 +52,7 @@ class UmlAttrBase(MoUmlElement):
 
 
 class UmlParameter(UmlAttrBase):
-        pass
+    direction ='in'
 
 
 class UmlAttribute(UmlAttrBase):
@@ -106,6 +106,8 @@ class UmlAssociationEnd(MoUmlElement):
     reference = dict
     def __init__(self):
         super().__init__()
+        #modified by candy,v3.1版后staruml中navigable默认为true
+        self.navigable=True
 
     def extraLoad(self,parser):
         super().extraLoad(parser)

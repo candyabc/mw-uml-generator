@@ -77,14 +77,18 @@ class ElRegistor(type):
 class UmlDict():
     def __init__(self):
         self._elements={}
+
     def add(self,el):
         self._elements[el.id]=el
+
     def get(self,id):
         return self._elements.get(id)
+
     def getRef(self,data):
         if not UML_REF in data.keys():
-            raise Exception('data is not a ref')
+            raise Exception('data is not a ref:%s' % data)
         return self.get(data[UML_REF])
+
     @property
     def elements(self):
         return list(self._elements.values())

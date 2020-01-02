@@ -1,4 +1,5 @@
 from jinja2 import FileSystemLoader,Environment
+import codecs
 import os,sys
 def check_and_createpath(file_path):
     if not os.path.exists(file_path):
@@ -26,5 +27,6 @@ def save_file_by_template(temp_file,saved_file,over_write=True,**args):
         saved_file=saved_file+'.new'
     render_txt = t.render(**args)
 
+
     with open(saved_file, 'w',encoding='utf-8') as f:
-        f.write(render_txt)
+        f.write(render_txt.encode('utf-8'))

@@ -101,10 +101,15 @@ class JttParamType:
             return swagger_param('integer','int64',isarray=self.isArray,fixlen=self.fixLen)
         elif name=='float':
             return swagger_param('number','float',isarray=self.isArray,fixlen=self.fixLen)
+        elif name =='integer':
+            return swagger_param('integer','int32',isarray=self.isArray,fixlen=self.fixLen)
+        elif name =='boolean':
+            return swagger_param('boolean',isarray=self.isArray,fixlen=self.fixLen)
         elif name =='string':
             return swagger_param('string','',isarray=self.isArray,fixlen=self.fixLen)
         elif name=='dict':
             return swagger_param('PlaceHolder','',isarray=self.isArray,fixlen=self.fixLen,isref =True)
+
         else:
             return swagger_param(self.name,'',isarray=self.isArray,fixlen=self.fixLen,isref =True)
 

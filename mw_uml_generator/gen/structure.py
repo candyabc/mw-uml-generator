@@ -15,8 +15,8 @@ CONFIG_FILE ='./gencodeFile.yml'
 def read_configfile():
     if not os.path.exists(CONFIG_FILE):
         sys.exit('%s 不存在,请先执行 gencode create project.'% CONFIG_FILE)
-    with open(CONFIG_FILE) as f:
-        return yaml.load(f.read())
+    with open(CONFIG_FILE,encoding='utf-8') as f:
+        return yaml.full_load(f.read())
 #
 # def write_configfile(cf):
 #     with open(CONFIG_FILE,mode='w') as f :

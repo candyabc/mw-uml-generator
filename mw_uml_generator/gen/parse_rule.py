@@ -44,7 +44,9 @@ def get_sw_type_format(atype):
     elif atype == 'file':
         return 'file', ''
     else:
-        assert False, 'swagger type not support :%s' % type
+        # print(type)
+        raise Exception('swagger type not support :%s' % type)
+        # assert False, 'swagger type not support :%s' % type
         # return atype, ''
 
 
@@ -132,7 +134,10 @@ class SwaggerHandle(BaseGenerateHandle):
         def parse_attr(attr, paramclass):
             _format = ''
             if type(attr.atype) == str :
-                name, _format = get_sw_type_format(attr.atype )
+                try:
+                    name, _format = get_sw_type_format(attr.atype )
+                except Exception as e :
+                    raise Exception('attr %s get_sw_type_format error :%s' %(attr,str(e)))
             elif type(attr.atype)==UmlEnumeration:
                 name ='string'
 
@@ -368,6 +373,7 @@ class ModelProfile():
         re =[]
         for field in self.fields:
             re.extend(field.render())
+
         return re
 
     def render_as_columns(self):
@@ -381,6 +387,7 @@ class ModelProfile():
             findstr ='db.Column('
             schema=schema.replace(findstr,findstr +'"%s",' % name)
             re.append(schema)
+
         return re
 
 

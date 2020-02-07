@@ -1,5 +1,6 @@
 
 import yaml
+from enum import Enum
 from typing import (List)
 # from ..template import genTemplate
 # from ..fileutils import FileOp
@@ -13,6 +14,11 @@ SS_FILE_IMG ='img'
 SS_FILE_PDF = 'pdf'
 SS_FILE_EXCEL = 'excel'
 
+class SS_RENDER_STYLE(Enum):
+    aiohttp =0
+    flask =1
+
+OPERATE_PREFIX ='app.{model_name}.{tag}'
 def parse_directive(text):
     re ={}
 
@@ -188,7 +194,7 @@ class SSoperation():
             if body_params[0].schema.name in ('integer','string'):
                 self.consumes.append('text/plain; charset=utf-8')
 
-        re_params =filter(lambda param:param.schema.name =='file',self.re_params)
+        re_params =list(filter(lambda param:param.schema.name =='file',self.re_params))
         if len(re_params):
             for re_param in re_params:
                 if SS_FILE_IMG in re_param.schema.file_types:
@@ -198,7 +204,7 @@ class SSoperation():
                 if SS_FILE_EXCEL in re_param.schema.file_types:
                     self.produces.append('application/vnd.ms-excel')
 
-    def render(self, paths, operationid_prefix):
+    def render(self, paths, operationid_prefix,style):
         paths[self.pathname] = paths.get(self.pathname) or {}
 
         full_operationid = '%s.%s' % (operationid_prefix, self.operatorid)
@@ -215,6 +221,10 @@ class SSoperation():
             "responses": {
                 param.name: param.render() for param in self.re_params
             }})
+        if style == SS_RENDER_STYLE.flask:
+            operation_schema["x-swagger-router-controller"]=operationid_prefix
+            operation_schema["operationId"] =self.operatorid
+
         if len(self.consumes)==0:
             operation_schema.pop('consumes')
         if len(self.produces) == 0:
@@ -239,7 +249,8 @@ class SwaggerProfile():
     ver = str
     name = str
 
-    def __init__(self, name, basepath, title=''):
+    def __init__(self, name, basepath, title='',style =SS_RENDER_STYLE.aiohttp ):
+        self.style = style
         self.name = name
         self.basepath = basepath
         self.host = 'localhost:8080'
@@ -248,6 +259,7 @@ class SwaggerProfile():
         self.operations = []
         self.definitions = []
         self.tags = []
+
         self.consumes = ['application/json']
         self.produces = ['application/json']
 
@@ -257,7 +269,6 @@ class SwaggerProfile():
 
     @property
     def model_name(self):
-
         return '%s_%s' % (self.name, self.ver)
 
     def model_routename(self):
@@ -280,9 +291,9 @@ class SwaggerProfile():
     def render(self):
         paths = {}
         for operation in self.operations:
-            operation.render(paths, 'app.apis.{model_name}.{tag}'.format(
+            operation.render(paths, OPERATE_PREFIX.format(
                 model_name=self.model_name,
-                tag=split_title(operation.tag)[0]))
+                tag=split_title(operation.tag)[0]),style=self.style)
 
         self.schema = OrderDictEx({
             "swagger": "2.0",

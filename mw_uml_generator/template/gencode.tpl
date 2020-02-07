@@ -13,6 +13,7 @@ model:
   # id_name: id
   # id_type: integer
   # id_connector: '_'
+  as_model: true
 
 #产生swagger的设定
 swagger:

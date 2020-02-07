@@ -1,12 +1,12 @@
 import os,sys
-from ..fileutils import update_save_file,create_directory,FileOp
+from ..fileutils import update_save_file,create_directory
 from ..log import logger
-from ..template import project_mdj,gencode_yml,genTemplate,gitignore,requirements,run_blank,readme
-from .generate import Generate
+from ..template import project_mdj,gencode_yml
 from six import iteritems
 import yaml
 import requests
 from .swagger2api import swagger2api
+from .generate import generate_struct
 
 
 CONFIG_FILE ='./gencodeFile.yml'
@@ -43,10 +43,10 @@ def save_structure(root_path,structure,overwrite =False):
 # def init_file(opts):
 #     update_save_file(CONFIG_FILE,gencodeFile(opts))
 
-def get_project_root(cwd):
-    project_name = cwd.split('\\')[-1]
-    project_name = project_name.split('/')[-1]
-    return project_name.replace('-', '_')
+# def get_project_root(cwd):
+#     project_name = cwd.split('\\')[-1]
+#     project_name = project_name.split('/')[-1]
+#     return project_name.replace('-', '_')
 
 def create_project(project_name,template):
     logger.report('run','create project: %s from %s' % (project_name,template))
@@ -71,30 +71,30 @@ def create_project(project_name,template):
 
     logger.info('create project %s finished.' % project_name)
 
-def up_temp_blank(project_name,opts,flag):
-    main_py ='''
-def main():
-    pass                                         
-'''
-    project_root = get_project_root(project_name)
-    project_data = {'__init__.py':('',FileOp.NO_OVERWRITE),
-                          'main.py':(main_py,FileOp.NO_OVERWRITE)}
-    if flag =='table':
-        opts['flag']=flag
-        generate = Generate(opts)
-        generate.modelhandle.gen_table_define(project_data)
+# def up_temp_blank(project_name,opts,flag):
+#     main_py ='''
+# def main():
+#     pass
+# '''
+#     project_root = get_project_root(project_name)
+#     project_data = {'__init__.py':('',FileOp.NO_OVERWRITE),
+#                           'main.py':(main_py,FileOp.NO_OVERWRITE)}
+#     if flag =='table':
+#         opts['flag']=flag
+#         generate = Generate(opts)
+#         generate.modelhandle.gen_table_define(project_data)
+#
+#     return {project_root:project_data,
+#             '.gitignore':(gitignore(),FileOp.NO_OVERWRITE),
+#             'requirements.txt':(requirements(),FileOp.NO_OVERWRITE),
+#             'README.md':(readme(project_name),FileOp.NO_OVERWRITE),
+#             'run.py':(run_blank(project_root),FileOp.NO_CREATE)}
 
-    return {project_root:project_data,
-            '.gitignore':(gitignore(),FileOp.NO_OVERWRITE),
-            'requirements.txt':(requirements(),FileOp.NO_OVERWRITE),
-            'README.md':(readme(project_name),FileOp.NO_OVERWRITE),
-            'run.py':(run_blank(project_root),FileOp.NO_CREATE)}
-
-def up_temp_config(project_name,opts,flag):
-    project_struct =up_temp_blank(project_name,opts,flag)
-    project_root = get_project_root(project_name)
-    project_struct[project_root].update({'config.py':(genTemplate('config'),FileOp.NO_OVERWRITE)})
-    return project_struct
+# def up_temp_config(project_name,opts,flag):
+#     project_struct =up_temp_blank(project_name,opts,flag)
+#     project_root = get_project_root(project_name)
+#     project_struct[project_root].update({'config.py':(genTemplate('config'),FileOp.NO_OVERWRITE)})
+#     return project_struct
 
 def init_config():
     logger.report('run', 'init config file')
@@ -102,48 +102,28 @@ def init_config():
     update_save_file(os.path.join(cwd,'gencodeFile.yml'),
     gencode_yml(uml_file ='',project = 'blank'))
 
-def up_project(overwrite = False,flag=None):
-    logger.report('run','up generate ')
+def up_project(**args):
+    logger.report('run','up generate')
     opts =read_configfile()
-    _p_type = opts.get('project')
-    if _p_type ==None:
+    opts['args']= args
+    up_type =args.get('up_type') or  opts.get('project')
+
+    if up_type is None:
         sys.exit('please set project type,use gencode up --type aiohttp|blank|config')
     cwd = os.getcwd()
-    project_name = cwd.split('/')[-1]
-    if _p_type =='aiohttp':
-        project_struct= create_aiohttp(opts,flag)
-    elif _p_type =='blank':
-        project_struct = up_temp_blank(project_name,opts,flag)
-    elif _p_type == 'config':
-        project_struct = up_temp_config(project_name,opts,flag)
-    else:
-        sys.exit('not support this type:%s' % _p_type)
+    try:
 
-    save_structure(cwd,project_struct,overwrite)
+        project_struct=generate_struct(up_type,opts)
+    except Exception as e:
+        sys.exit(str(e))
+    save_structure(cwd,project_struct,args.get('overwrite',False))
     logger.info( 'up generate finished')
 
-def create_aiohttp(opts,flag):
-    opts['flag']=flag
-    generate = Generate(opts)
-    return generate.render_aiohttp()
-
-def gen_docker():
-    try:
-        opts = read_configfile()
-        envs = opts.get('env')
-    except:
-        envs = None
-
-    cwd = os.getcwd()
-    project_root =get_project_root(cwd)
-    docker_struct =\
-        {'docker-compose.yml':(genTemplate('docker-compose',envs =envs or {},project = project_root),FileOp.CREATE_NEW),
-         'run.sh':(genTemplate('run_sh',envs =opts.get('env') or {}),FileOp.CREATE_NEW)}
-    save_structure(cwd, docker_struct)
 
 
 def isBlank(v):
     return v in [None,'']
+
 def gen_apijs(name,infile,outfile):
     logger.report('run', 'run swagger2api name %s ,in:%s:out:%s' % (name,infile,outfile))
     try:

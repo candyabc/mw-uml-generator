@@ -82,6 +82,7 @@ class BaseGenerateHandle():
         enum_profile = EnumProfile(uml_enum.name, uml_enum.title)
         enum_profile.literals = [(literal.name, literal.title) for literal in uml_enum.literals]
         return enum_profile
+
     def generate(self):
         pass
 
@@ -102,6 +103,12 @@ class AioSwaggerProfile(SwaggerProfile):
 
         app_struct['swagger'] = app_struct.get('swagger', {})
         app_struct['swagger']['%s.yml' % self.name] = (self.dump(), FileOp.OVERWRITE)
+
+# class BaseStructGenerator:
+#     pass
+#
+# class AioHttpStructGenerator(BaseStructGenerator):
+#     pass
 
 
 class SwaggerHandle(BaseGenerateHandle):
@@ -131,6 +138,7 @@ class SwaggerHandle(BaseGenerateHandle):
         super().__init__(parser)
 
     def _parse(self, model):
+
         def parse_attr(attr, paramclass):
             _format = ''
             if type(attr.atype) == str :
@@ -147,11 +155,11 @@ class SwaggerHandle(BaseGenerateHandle):
                 raise Exception('not support attr.atype:%s' % attr.atype)
 
             flags = attr.stereotype.split('/')
-            return paramclass(attr.name, attr.title, required=('nq' in flags),
-                              schema=SSParamSchema(name, format=_format, isarray=attr.isArray,
-                                                   isref=type(attr.atype) == UmlClass,
-                                                   enum_define=self.parse_enum(attr.atype) if type(attr.atype)==UmlEnumeration else None),
-                                                   file_types = attr.stereotype.split('/') if name =='file' else [])
+            # return paramclass(attr.name, attr.title, required=('nq' in flags),
+            #                   schema=SSParamSchema(name, format=_format, isarray=attr.isArray,
+            #                                        isref=(type(attr.atype) == UmlClass),
+            #                                        enum_define=self.parse_enum(attr.atype) if type(attr.atype)==UmlEnumeration else None))
+                                                   # file_types = attr.stereotype.split('/') if name =='file' else [])
 
         def parse_in_param(attr):
             param = parse_attr(attr, SSInParam)
@@ -219,10 +227,11 @@ class SwaggerHandle(BaseGenerateHandle):
                 # if len(re_params) == 0:
                 #     ssop.re_params.append(SSParam('200','response message ok'))
                 # else:
-                assert len(re_params) >= 1 and type(re_params[0].atype) == UmlPrimitiveType
+                assert (len(re_params) >= 1) and (type(re_params[0].atype) == UmlPrimitiveType),'re_params is not valid'
                 if len(re_params[0].atype.attrs) == 0:
                     ssop.re_params.append(SSResponseParam('default', 'response message ok'))
                 else:
+
                     ssop.re_params = [parse_attr(attr, SSResponseParam) for attr in re_params[0].atype.attrs]
                     if self.paginate:
                         haspage = False
@@ -242,6 +251,7 @@ class SwaggerHandle(BaseGenerateHandle):
         uml_classes = model.filterDeep(UmlClass)
         profile.definitions = [parse_definition(uml_class) for uml_class in uml_classes]
         return profile
+
     def md2swagger(self,filename,name):
         swagger = AioSwaggerProfile(name,'')
         parser =MdTemplateParser(swagger)
@@ -252,6 +262,11 @@ class SwaggerHandle(BaseGenerateHandle):
         models = self.root.search(lambda el: type(el) == UmlModel and el.name == 'swagger')
 
         for model in models:
+            # 对swagger models中的primitType支持inherited
+            primitives = model.filterDeep(UmlPrimitiveType)
+            for primitive in primitives:
+                primitive.do_generalize()
+
             self.swaggers.append(self._parse(model))
 
     def gen_aiohttps(self, app_struct):

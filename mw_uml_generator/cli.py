@@ -3,7 +3,7 @@ import click
 import sys
 import logging
 from . import __version__
-from .import create_project,up_project,gen_docker,gen_apijs,init_config
+from .import create_project,up_project,gen_apijs,init_config
 from .log import configure_logger
 
 
@@ -38,15 +38,17 @@ def create(project_name,template):
 
 @cli.command()
 # @click.option('--typ',type=str,default ='aiohttp',help='工程类别 aiohttp | flask')
-@click.option('-f','--flag',type=str,help='')
+# @click.option('-f','--flag',type=str,help='')
 @click.option('-o','--overwrite',type=bool,default =False ,help='是否强制全覆盖所有文件')
 
-def up(flag=None,overwrite=False):
-    up_project(overwrite,flag=flag)
+def up(overwrite=False):
+    up_project(overwrite=overwrite)
 
 @cli.command()
-def docker():
-   gen_docker()
+@click.option('-o','--overwrite',type=bool,default =False ,help='是否强制全覆盖所有文件')
+@click.option('-v','--version',type=str,default ='37' ,help='python 版本37|36')
+def docker(overwrite,version='37'):
+    up_project(up_type='docker',overwrite=overwrite,version =version)
 
 @cli.command()
 @click.option('-n','--name',type=str,help='在 config 文件 apijs设定的名称')
